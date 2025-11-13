@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sky Plotter</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Sky Plotter</h1>
+  <div id="controls">
+    <input id="azimuth" type="number" placeholder="Azimuth (°)" value="45" />
+    <input id="altitude" type="number" placeholder="Altitude (°)" value="30" />
+    <button id="plotBtn">Plot</button>
+  </div>
+
+  <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
+      }
+    }
+  </script>
+  <!-- Your main script -->
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
