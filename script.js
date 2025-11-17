@@ -91,6 +91,43 @@ const sphere = new THREE.Mesh(
 
 scene.add(sphere);
 
+function makeTextSprite(message, parameters) {
+  const font = parameters?.font || "48px Arial";
+  const fillStyle = parameters?.fillStyle || "white";
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  ctx.font = font;
+
+  const textMetrics = ctx.measureText(message);
+  const textWidth = textMetrics.width;
+  const textHeight = 48;
+
+  canvas.width = textWidth * 2;
+  canvas.height = textHeight * 2;
+
+  ctx.font = font;
+  ctx.fillStyle = fillStyle;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+
+  const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(spriteMaterial);
+
+  sprite.scale.set(10, 12, 1);
+  return sprite;
+}
+
+const text = makeTextSprite("N");
+text.position.set(0, 60, 0);
+scene.add(text);
+
 // Animation
 
 const controls = new OrbitControls(camera, renderer.domElement);
