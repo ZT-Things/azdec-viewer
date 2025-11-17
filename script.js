@@ -53,25 +53,31 @@ scene.add( x_z );
 
 // Lines
 
-const x_line = new THREE.Mesh(
-  new THREE.BoxGeometry(100, 0.15, 0.15),
-  new THREE.MeshBasicMaterial({ color: 0xffffff }),
-)
-
+// X line
+const x_points = [ new THREE.Vector3(-50, 0, 0), new THREE.Vector3(50, 0, 0) ];
+const x_geometry = new THREE.BufferGeometry().setFromPoints(x_points);
+const x_line = new THREE.Line(
+  x_geometry,
+  new THREE.LineBasicMaterial({ color: 0xff0000 }) // red
+);
 scene.add(x_line);
 
-const y_line = new THREE.Mesh(
-  new THREE.BoxGeometry(0.15, 100, 0.15),
-  new THREE.MeshBasicMaterial({ color: 0xffffff }),
-)
-
+// Y line
+const y_points = [ new THREE.Vector3(0, -50, 0), new THREE.Vector3(0, 50, 0) ];
+const y_geometry = new THREE.BufferGeometry().setFromPoints(y_points);
+const y_line = new THREE.Line(
+  y_geometry,
+  new THREE.LineBasicMaterial({ color: 0x00ff00 }) // green
+);
 scene.add(y_line);
 
-const z_line = new THREE.Mesh(
-  new THREE.BoxGeometry(0.15, 0.15, 100),
-  new THREE.MeshBasicMaterial({ color: 0xffffff }),
-)
-
+// Z line
+const z_points = [ new THREE.Vector3(0, 0, -50), new THREE.Vector3(0, 0, 50) ];
+const z_geometry = new THREE.BufferGeometry().setFromPoints(z_points);
+const z_line = new THREE.Line(
+  z_geometry,
+  new THREE.LineBasicMaterial({ color: 0x0000ff }) // blue
+);
 scene.add(z_line);
 
 const sphere = new THREE.Mesh(
