@@ -165,9 +165,9 @@
     <div class="overlay" id="overlay"></div>
     <div class="ui-panel" id="uiPanel">
       <label for="azimuth_input">Azimuth:</label>
-      <input type="text" id="azimuth_input" placeholder="(-360 - 360)">
+      <input type="number" min="0" max="359" id="azimuth_input" placeholder="(0 - 359)">
       <label for="altitude_input">Altitude:</label>
-      <input type="text" id="altitude_input" placeholder="(-90 - 90)">
+      <input type="number" min="-90" max="90" id="altitude_input" placeholder="(-90 - 90)">
       <button id="renderBtn">Render</button>
     </div>
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js" crossorigin="anonymous"></script>

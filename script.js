@@ -26,55 +26,53 @@ function generateCircleLine() {
   );
 }
 
-function generateStraightLine() {
-  return new THREE.Mesh(
-    new THREE.BoxGeometry(0.15, 0.15, 100),
-    new THREE.MeshBasicMaterial({ color: 0xffffff }),
-  );
-}
-
-const x_y = generateCircleLine();
-x_y.rotation.y = 0;
-scene.add( x_y );
-
-// Circle along the z and y axis
-
-const z_y = generateCircleLine();
-z_y.rotation.y = 90 * (Math.PI / 180);
-scene.add( z_y );
-
-// Circle along the x and z axis
-
 const x_z = generateCircleLine();
 x_z.rotation.x = 90 * (Math.PI / 180);
 scene.add( x_z );
 
-// Lines
+function generateTransparentCylinder() {
+  const geometry = new THREE.CylinderGeometry(50, 50, 0.1, 64);
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.1,
+    side: THREE.DoubleSide,
+  });
 
+  const cylinder = new THREE.Mesh(geometry, material);
+
+  return cylinder;
+}
+
+const innerCylinder = generateTransparentCylinder();
+scene.add(innerCylinder);
+//
+// // Lines
+//
 // X line
 const x_points = [ new THREE.Vector3(-50, 0, 0), new THREE.Vector3(50, 0, 0) ];
 const x_geometry = new THREE.BufferGeometry().setFromPoints(x_points);
 const x_line = new THREE.Line(
   x_geometry,
-  new THREE.LineBasicMaterial({ color: 0xff0000 }) // red
+  new THREE.LineBasicMaterial({ color: 0x222222 }) // red
 );
 scene.add(x_line);
-
-// Y line
-const y_points = [ new THREE.Vector3(0, -50, 0), new THREE.Vector3(0, 50, 0) ];
-const y_geometry = new THREE.BufferGeometry().setFromPoints(y_points);
-const y_line = new THREE.Line(
-  y_geometry,
-  new THREE.LineBasicMaterial({ color: 0x00ff00 }) // green
-);
-scene.add(y_line);
-
+//
+// // Y line
+// const y_points = [ new THREE.Vector3(0, -50, 0), new THREE.Vector3(0, 50, 0) ];
+// const y_geometry = new THREE.BufferGeometry().setFromPoints(y_points);
+// const y_line = new THREE.Line(
+//   y_geometry,
+//   new THREE.LineBasicMaterial({ color: 0x00ff00 }) // green
+// );
+// scene.add(y_line);
+//
 // Z line
 const z_points = [ new THREE.Vector3(0, 0, -50), new THREE.Vector3(0, 0, 50) ];
 const z_geometry = new THREE.BufferGeometry().setFromPoints(z_points);
 const z_line = new THREE.Line(
   z_geometry,
-  new THREE.LineBasicMaterial({ color: 0x0000ff }) // blue
+  new THREE.LineBasicMaterial({ color: 0x222222 }) // blue
 );
 scene.add(z_line);
 
@@ -154,10 +152,10 @@ const zenith_text = makeTextSprite("Zenith");
 zenith_text.position.set(0, 55, 0);
 scene.add(zenith_text);
 
-const observer = makeTextSprite("Obs");
-observer.position.set(0, 0, 0);
-observer.renderOrder = -1;
-scene.add(observer);
+// const observer = makeTextSprite("Obs");
+// observer.position.set(0, 0, 0);
+// observer.renderOrder = -1;
+// scene.add(observer);
 
 // Generate star
 
