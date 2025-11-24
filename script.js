@@ -46,9 +46,10 @@ function generateTransparentCylinder() {
 
 const innerCylinder = generateTransparentCylinder();
 scene.add(innerCylinder);
-//
-// // Lines
-//
+
+
+
+// Lines
 // X line
 const x_points = [ new THREE.Vector3(-50, 0, 0), new THREE.Vector3(50, 0, 0) ];
 const x_geometry = new THREE.BufferGeometry().setFromPoints(x_points);
@@ -86,24 +87,85 @@ const sphere = new THREE.Mesh(
 );
 scene.add(sphere);
 
-function makeTextSprite(message, parameters) {
-  const font = parameters?.font || "48px Arial";
-  const fillStyle = parameters?.fillStyle || "white";
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+function createStickman(scale = 1) {
+  const stickmanGroup = new THREE.Group();
 
-  // Measure text with proper font
+  // Head (sphere)
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(3 * scale, 32, 32),
+    new THREE.MeshStandardMaterial({ color: 0xffcc99 })
+  );
+  head.position.y = 8 * scale;
+  stickmanGroup.add(head);
+
+  // Body (box)
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(2 * scale, 6 * scale, 2 * scale),
+    new THREE.MeshStandardMaterial({ color: 0x222222 })
+  );
+  body.position.y = 2 * scale;
+  stickmanGroup.add(body);
+
+  // Left arm (box)
+  const leftArm = new THREE.Mesh(
+    new THREE.BoxGeometry(6 * scale, 1.5 * scale, 1 * scale),
+    new THREE.MeshStandardMaterial({ color: 0xffcc99 })
+  );
+  leftArm.position.set(-3.5 * scale, 5 * scale, 0);
+  stickmanGroup.add(leftArm);
+
+  // Right arm (box)
+  const rightArm = new THREE.Mesh(
+    new THREE.BoxGeometry(6 * scale, 1.5 * scale, 1 * scale),
+    new THREE.MeshStandardMaterial({ color: 0xffcc99 })
+  );
+  rightArm.position.set(3.5 * scale, 5 * scale, 0);
+  stickmanGroup.add(rightArm);
+
+  // Left leg (box)
+  const leftLeg = new THREE.Mesh(
+    new THREE.BoxGeometry(1 * scale, 5 * scale, 1 * scale),
+    new THREE.MeshStandardMaterial({ color: 0x4a4a4a })
+  );
+  leftLeg.position.set(-1.2 * scale, -2.5 * scale, 0);
+  stickmanGroup.add(leftLeg);
+
+  // Right leg (box)
+  const rightLeg = new THREE.Mesh(
+    new THREE.BoxGeometry(1 * scale, 5 * scale, 1 * scale),
+    new THREE.MeshStandardMaterial({ color: 0x4a4a4a })
+  );
+  rightLeg.position.set(1.2 * scale, -2.5 * scale, 0);
+  stickmanGroup.add(rightLeg);
+
+  return stickmanGroup;
+}
+
+const stickman = createStickman(0.25);
+scene.add(stickman);
+
+function makeTextSprite(message, parameters = {}) {
+  const font = parameters.font || "48px Arial";
+  const fillStyle = parameters.fillStyle || "white";
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { alpha: true }); // ensure alpha channel
+
+  // Measure text
   ctx.font = font;
   const textMetrics = ctx.measureText(message);
   const textWidth = textMetrics.width;
   const textHeight = 48;
 
-  // Add padding and ensure power-of-2 dimensions for better texture quality
   const padding = 20;
+
   canvas.width = Math.pow(2, Math.ceil(Math.log2(textWidth + padding * 2)));
   canvas.height = Math.pow(2, Math.ceil(Math.log2(textHeight + padding * 2)));
 
-  // Redraw text centered on canvas
+  // Clear background (just to be explicit)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw text
   ctx.font = font;
   ctx.fillStyle = fillStyle;
   ctx.textAlign = "center";
@@ -116,17 +178,17 @@ function makeTextSprite(message, parameters) {
   const spriteMaterial = new THREE.SpriteMaterial({
     map: texture,
     transparent: true,
-    sizeAttenuation: true,
+    color: 0xffffff, // ensure no tint
+    depthWrite: false, // avoids renderOrder issues
   });
 
   const sprite = new THREE.Sprite(spriteMaterial);
 
-  // Scale based on actual text width for proper aspect ratio
+  // Scale sprite to text aspect ratio
   const scale = (textWidth + padding * 2) / 10;
   sprite.scale.set(scale, scale * 0.8, 1);
 
-  // Make text always face camera
-  sprite.renderOrder = 0;
+  sprite.renderOrder = 0; // safe
 
   return sprite;
 }
@@ -321,6 +383,18 @@ function disposeAngle() {
     altitude_angle = null;
   }
 }
+
+azimuth_input.addEventListener("input", (e) => {
+  let v = parseInt(e.target.value);
+  if (isNaN(v)) return;
+  e.target.value = Math.max(0, Math.min(359, v));
+});
+
+altitude_input.addEventListener("input", (e) => {
+  let v = parseInt(e.target.value);
+  if (isNaN(v)) return;
+  e.target.value = Math.max(-90, Math.min(90, v));
+});
 
 document.getElementById("renderBtn").addEventListener("click", () => {
   // Remove previous star
