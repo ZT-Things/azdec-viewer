@@ -4,15 +4,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 let scene = new THREE.Scene();
 
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-camera.position.set(100, 50, 100);
+camera.position.set(-100, 80, -80);
 
 let renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#bg"),
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-
-camera.position.setZ(30);
 
 // Main
 
@@ -88,45 +86,113 @@ const sphere = new THREE.Mesh(
     opacity: 0.2,
   }),
 );
-
 scene.add(sphere);
 
 function makeTextSprite(message, parameters) {
   const font = parameters?.font || "48px Arial";
   const fillStyle = parameters?.fillStyle || "white";
-
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
+  // Measure text with proper font
   ctx.font = font;
-
   const textMetrics = ctx.measureText(message);
   const textWidth = textMetrics.width;
   const textHeight = 48;
 
-  canvas.width = textWidth * 2;
-  canvas.height = textHeight * 2;
+  // Add padding and ensure power-of-2 dimensions for better texture quality
+  const padding = 20;
+  canvas.width = Math.pow(2, Math.ceil(Math.log2(textWidth + padding * 2)));
+  canvas.height = Math.pow(2, Math.ceil(Math.log2(textHeight + padding * 2)));
 
+  // Redraw text centered on canvas
   ctx.font = font;
   ctx.fillStyle = fillStyle;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-
   ctx.fillText(message, canvas.width / 2, canvas.height / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
 
-  const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const spriteMaterial = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    sizeAttenuation: true,
+  });
+
   const sprite = new THREE.Sprite(spriteMaterial);
 
-  sprite.scale.set(10, 12, 1);
+  // Scale based on actual text width for proper aspect ratio
+  const scale = (textWidth + padding * 2) / 10;
+  sprite.scale.set(scale, scale * 0.8, 1);
+
+  // Make text always face camera
+  sprite.renderOrder = 0;
+
   return sprite;
 }
 
-const text = makeTextSprite("N");
-text.position.set(0, 60, 0);
-scene.add(text);
+// Texts - positioned outside the sphere
+const north_text = makeTextSprite("N");
+north_text.position.set(55, 0, 0);
+scene.add(north_text);
+
+const south_text = makeTextSprite("S");
+south_text.position.set(-55, 0, 0);
+scene.add(south_text);
+
+const west_text = makeTextSprite("W");
+west_text.position.set(0, 0, -55);
+scene.add(west_text);
+
+const east_text = makeTextSprite("E");
+east_text.position.set(0, 0, 55);
+scene.add(east_text);
+
+const zenith_text = makeTextSprite("Zenith");
+zenith_text.position.set(0, 55, 0);
+scene.add(zenith_text);
+
+const observer = makeTextSprite("Observer");
+observer.position.set(0, 0, 0);
+observer.renderOrder = -1;
+scene.add(observer);
+
+// Generate star
+
+function generateStar(azimuth, altitude, radius = 50) {
+  altitude = altitude - 90
+  azimuth = 360 - azimuth - 90
+  const star = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 2, 2),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+
+  // convert degrees → radians
+  const theta = azimuth * Math.PI / 180; // around Y (left-right)
+  const phi   = altitude   * Math.PI / 180; // up-down
+
+  // set spherical position
+  star.position.setFromSpherical(
+    new THREE.Spherical(radius, phi, theta)
+  );
+
+  scene.add(star);
+  return star;
+}
+
+let star = null;
+
+document.getElementById("renderBtn").addEventListener("click", () => {
+  if (star) {
+    scene.remove(star);
+  }
+  const azimuth = document.getElementById("azimuth_input").value;
+  const altitude = document.getElementById("altitude_input").value;
+
+  star = generateStar(azimuth, altitude);
+});
 
 // Animation
 

@@ -2,13 +2,107 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Sky Plotter</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Azdec Viewer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+      }
+
+      h1 {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        z-index: 10;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100vh;
+      }
+
+      .ui-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 15px;
+        border-radius: 8px;
+        color: white;
+      }
+
+      .ui-panel input {
+        display: block;
+        width: 200px;
+        margin-bottom: 10px;
+        padding: 8px;
+        border: 1px solid #444;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .ui-panel input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .ui-panel button {
+        width: 200px;
+        padding: 8px;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: background 0.2s;
+      }
+
+      .ui-panel button:hover {
+        background: #0052a3;
+      }
+
+      .output {
+        margin-top: 10px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 4px;
+        min-height: 20px;
+        font-size: 12px;
+      }
+
+      .ui-panel label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+        color: white;
+        opacity: 0.9;
+      }
+    </style>
   </head>
   <body>
-    <h1>Sky Plotter</h1>
-
     <canvas id="bg"></canvas>
+
+    <div class="ui-panel">
+      <label for="azimuth_input">Azimuth:</label>
+      <input type="text" id="azimuth_input" placeholder="(-360 - 360)">
+
+      <label for="altitude_input">Altitude:</label>
+      <input type="text" id="altitude_input" placeholder="(-90 - 90)">
+
+      <button id="renderBtn">Render</button>
+    </div>
 
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
     <script type="importmap">
@@ -19,7 +113,6 @@
       }
     }
     </script>
-    <!-- Your main script -->
     <script type="module" src="./script.js"></script>
   </body>
 </html>
