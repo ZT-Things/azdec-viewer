@@ -266,36 +266,61 @@ function generateStar(azimuth, altitude, radius = 50) {
 
 let star = null;
 let angle = null;
+let azimuth_angle = null;
+let altitude_angle = null;
 
-function disposeAngle(angleObj) {
-  if (!angleObj) return;
-
-  // Dispose horizontal arc
-  if (angleObj.horizontal?.arcLine) {
-    scene.remove(angleObj.horizontal.arcLine);
-    angleObj.horizontal.arcLine.geometry?.dispose();
-    angleObj.horizontal.arcLine.material?.dispose();
+function disposeAngle() {
+  // Dispose star
+  if (star) {
+    scene.remove(star);
+    star.geometry?.dispose();
+    star.material?.dispose();
+    star = null;
   }
 
-  // Dispose horizontal indicator line
-  if (angleObj.horizontal?.line) {
-    scene.remove(angleObj.horizontal.line);
-    angleObj.horizontal.line.geometry?.dispose();
-    angleObj.horizontal.line.material?.dispose();
+  // Dispose angle
+  if (angle) {
+    // horizontal
+    if (angle.horizontal?.arcLine) {
+      scene.remove(angle.horizontal.arcLine);
+      angle.horizontal.arcLine.geometry?.dispose();
+      angle.horizontal.arcLine.material?.dispose();
+    }
+    if (angle.horizontal?.line) {
+      scene.remove(angle.horizontal.line);
+      angle.horizontal.line.geometry?.dispose();
+      angle.horizontal.line.material?.dispose();
+    }
+
+    // vertical
+    if (angle.vertical?.arcLine) {
+      scene.remove(angle.vertical.arcLine);
+      angle.vertical.arcLine.geometry?.dispose();
+      angle.vertical.arcLine.material?.dispose();
+    }
+    if (angle.vertical?.line) {
+      scene.remove(angle.vertical.line);
+      angle.vertical.line.geometry?.dispose();
+      angle.vertical.line.material?.dispose();
+    }
+
+    angle = null;
   }
 
-  // Dispose vertical arc
-  if (angleObj.vertical?.arcLine) {
-    scene.remove(angleObj.vertical.arcLine);
-    angleObj.vertical.arcLine.geometry?.dispose();
-    angleObj.vertical.arcLine.material?.dispose();
+  // Dispose azimuth_angle sprite
+  if (azimuth_angle) {
+    scene.remove(azimuth_angle);
+    if (azimuth_angle.material.map) azimuth_angle.material.map.dispose();
+    azimuth_angle.material.dispose();
+    azimuth_angle = null;
   }
 
-  // Dispose vertical indicator line
-  if (angleObj.vertical?.line) {
-    scene.remove(angleObj.vertical.line);
-    angleObj.vertical.line.geometry?.dispose();
-    angleObj.vertical.line.material?.dispose();
+  // Dispose altitude_angle sprite
+  if (altitude_angle) {
+    scene.remove(altitude_angle);
+    if (altitude_angle.material.map) altitude_angle.material.map.dispose();
+    altitude_angle.material.dispose();
+    altitude_angle = null;
   }
 }
 
@@ -318,9 +343,35 @@ document.getElementById("renderBtn").addEventListener("click", () => {
   const azimuth = parseFloat(document.getElementById("azimuth_input").value);
   const altitude = parseFloat(document.getElementById("altitude_input").value);
 
+  // Convert degrees to radians
+  const azRad = THREE.MathUtils.degToRad(azimuth);
+  const altRad = THREE.MathUtils.degToRad(altitude);
+
+  // Set radius for placement
+  const radius = 20;
+
+  // Convert spherical to Cartesian coordinates
+  const x = radius * Math.cos(altRad) * Math.cos(azRad);
+  const y = radius * Math.sin(altRad);
+  const z = radius * Math.cos(altRad) * Math.sin(azRad);
+
   // Create new angle indicator and star
-  angle = createAngleIndicator(new THREE.Vector3(0, 0, 0), 10, 0, azimuth, altitude, 0xaaaaaa);
+  angle = createAngleIndicator(new THREE.Vector3(0, 0, 0), 20, 0, azimuth, altitude, 0xaaaaaa);
   star = generateStar(azimuth, altitude);
+
+  // Position star according to azimuth & altitude
+  scene.add(star);
+
+  // Position text labels
+  azimuth_angle = makeTextSprite(azimuth.toString());
+  azimuth_angle.position.set(x, 0, z / 2); // slightly above the star
+  azimuth_angle.renderOrder = -1;
+  scene.add(azimuth_angle);
+
+  altitude_angle = makeTextSprite(altitude.toString());
+  altitude_angle.position.set(x, y - 10, z); // slightly below the star
+  altitude_angle.renderOrder = -1;
+  scene.add(altitude_angle);
 });
 
 // Animation
