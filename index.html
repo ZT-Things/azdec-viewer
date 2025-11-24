@@ -10,12 +10,10 @@
         padding: 0;
         box-sizing: border-box;
       }
-
       body {
         font-family: Arial, sans-serif;
         overflow: hidden;
       }
-
       h1 {
         position: absolute;
         top: 20px;
@@ -23,43 +21,46 @@
         color: white;
         z-index: 10;
       }
-
       canvas {
         display: block;
         width: 100%;
         height: 100vh;
       }
-
       .ui-panel {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        right: 0;
+        top: 0;
+        height: 100vh;
+        width: 300px;
         z-index: 100;
-        background: rgba(0, 0, 0, 0.7);
-        padding: 15px;
-        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.9);
+        padding: 20px;
         color: white;
+        overflow-y: auto;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        border-left: 1px solid #444;
       }
-
+      .ui-panel.open {
+        transform: translateX(0);
+      }
       .ui-panel input {
         display: block;
-        width: 200px;
+        width: 100%;
         margin-bottom: 10px;
-        padding: 8px;
+        padding: 10px;
         border: 1px solid #444;
         background: rgba(255, 255, 255, 0.1);
         color: white;
         border-radius: 4px;
         font-size: 16px;
       }
-
       .ui-panel input::placeholder {
         color: rgba(255, 255, 255, 0.5);
       }
-
       .ui-panel button {
-        width: 200px;
-        padding: 8px;
+        width: 100%;
+        padding: 10px;
         background: #0066cc;
         color: white;
         border: none;
@@ -69,11 +70,9 @@
         font-weight: bold;
         transition: background 0.2s;
       }
-
       .ui-panel button:hover {
         background: #0052a3;
       }
-
       .output {
         margin-top: 10px;
         padding: 10px;
@@ -82,7 +81,6 @@
         min-height: 20px;
         font-size: 12px;
       }
-
       .ui-panel label {
         display: block;
         margin-bottom: 4px;
@@ -90,40 +88,89 @@
         color: white;
         opacity: 0.9;
       }
-
-      @media (max-width: 600px) {
+      .toggle-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 101;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: background 0.2s;
+      }
+      .toggle-btn:hover {
+        background: #0052a3;
+      }
+      .toggle-btn.active {
+        background: #cc6600;
+      }
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease-in-out;
+      }
+      .overlay.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+      @media (max-width: 768px) {
+        .toggle-btn {
+          display: block;
+        }
         .ui-panel {
-          bottom: 10px;
-          right: 10px;
-          padding: 12px;
+          width: 250px;
         }
-
-        .ui-panel input,
-        .ui-panel button {
-          width: 100%;
-          font-size: 18px;
-          padding: 12px;
+      }
+      @media (min-width: 769px) {
+        .toggle-btn {
+          display: none;
         }
-
-        .ui-panel label {
-          font-size: 16px;
+        .ui-panel {
+          position: relative;
+          transform: none !important;
+          right: auto;
+          top: auto;
+          height: auto;
+          width: auto;
+          background: rgba(0, 0, 0, 0.7);
+          border-left: none;
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          padding: 15px;
+          border-radius: 8px;
+        }
+        .overlay {
+          display: none !important;
         }
       }
     </style>
   </head>
   <body>
     <canvas id="bg"></canvas>
-
-    <div class="ui-panel">
+    <h1>Azdec Viewer</h1>
+    <button class="toggle-btn" id="toggleBtn">☰ Panel</button>
+    <div class="overlay" id="overlay"></div>
+    <div class="ui-panel" id="uiPanel">
       <label for="azimuth_input">Azimuth:</label>
       <input type="text" id="azimuth_input" placeholder="(-360 - 360)">
-
       <label for="altitude_input">Altitude:</label>
       <input type="text" id="altitude_input" placeholder="(-90 - 90)">
-
       <button id="renderBtn">Render</button>
+      <div class="output" id="output"></div>
     </div>
-
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
     <script type="importmap">
     {
@@ -132,6 +179,30 @@
         "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
       }
     }
+    </script>
+    <script type="module">
+      const toggleBtn = document.getElementById('toggleBtn');
+      const uiPanel = document.getElementById('uiPanel');
+      const overlay = document.getElementById('overlay');
+
+      toggleBtn.addEventListener('click', () => {
+        uiPanel.classList.toggle('open');
+        overlay.classList.toggle('active');
+        toggleBtn.classList.toggle('active');
+      });
+
+      overlay.addEventListener('click', () => {
+        uiPanel.classList.remove('open');
+        overlay.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      });
+
+      // Close panel when clicking inside it (for mobile UX)
+      document.getElementById('renderBtn').addEventListener('click', () => {
+        uiPanel.classList.remove('open');
+        overlay.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      });
     </script>
     <script type="module" src="./script.js"></script>
   </body>
