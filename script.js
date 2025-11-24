@@ -154,12 +154,94 @@ const zenith_text = makeTextSprite("Zenith");
 zenith_text.position.set(0, 55, 0);
 scene.add(zenith_text);
 
-const observer = makeTextSprite("Observer");
+const observer = makeTextSprite("Obs");
 observer.position.set(0, 0, 0);
 observer.renderOrder = -1;
 scene.add(observer);
 
 // Generate star
+
+function createAngleIndicator(origin, radius, startDeg, endDeg, altitudeDeg, color = 0xff0000) {
+  // ============ HORIZONTAL (AZIMUTH) ============
+  const startRad = THREE.MathUtils.degToRad(startDeg);
+  const endRad = THREE.MathUtils.degToRad(endDeg);
+
+  const hPoints = [];
+  const segments = 50;
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const angle = startRad + t * (endRad - startRad);
+    const x = origin.x + radius * Math.cos(angle);
+    const z = origin.z + radius * Math.sin(angle);
+    const y = origin.y;
+    hPoints.push(new THREE.Vector3(x, y, z));
+  }
+
+  const hGeometry = new THREE.BufferGeometry().setFromPoints(hPoints);
+  const hMaterial = new THREE.LineBasicMaterial({ color });
+  const hArcLine = new THREE.Line(hGeometry, hMaterial);
+  scene.add(hArcLine);
+
+  // Horizontal indicator line (midpoint)
+  const hMidAngle = (startRad + endRad);
+  const straightLength = 50;
+  const hStraightEnd = new THREE.Vector3(
+    origin.x + straightLength * Math.cos(hMidAngle),
+    origin.y,
+    origin.z + straightLength * Math.sin(hMidAngle)
+  );
+  const hStraightGeometry = new THREE.BufferGeometry().setFromPoints([origin, hStraightEnd]);
+  const hStraightLine = new THREE.Line(hStraightGeometry, new THREE.LineBasicMaterial({ color: 0x00ff00 }));
+  scene.add(hStraightLine);
+
+  // ============ VERTICAL (ALTITUDE) ============
+  // The altitude arc should be in a vertical plane oriented along the azimuth direction
+  const azimuthRad = THREE.MathUtils.degToRad(endDeg); // Use end azimuth direction
+  const altStartRad = THREE.MathUtils.degToRad(0);
+  const altEndRad = THREE.MathUtils.degToRad(altitudeDeg);
+
+  const vPoints = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const elevationAngle = altStartRad + t * (altEndRad - altStartRad);
+
+    // Distance from vertical axis at this elevation
+    const horizontalDist = radius * Math.cos(elevationAngle);
+    // Height above horizontal plane
+    const verticalDist = radius * Math.sin(elevationAngle);
+
+    // Apply azimuth rotation to horizontal component
+    const x = origin.x + horizontalDist * Math.cos(azimuthRad);
+    const z = origin.z + horizontalDist * Math.sin(azimuthRad);
+    const y = origin.y + verticalDist;
+
+    vPoints.push(new THREE.Vector3(x, y, z));
+  }
+
+  const vGeometry = new THREE.BufferGeometry().setFromPoints(vPoints);
+  const vMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+  const vArcLine = new THREE.Line(vGeometry, vMaterial);
+  scene.add(vArcLine);
+
+  // Vertical indicator line (midpoint of altitude arc)
+  const vMidAngle = (altStartRad + altEndRad);
+  const vHorizontalDist = straightLength * Math.cos(vMidAngle);
+  const vVerticalDist = straightLength * Math.sin(vMidAngle);
+
+  const vStraightEnd = new THREE.Vector3(
+    origin.x + vHorizontalDist * Math.cos(azimuthRad),
+    origin.y + vVerticalDist,
+    origin.z + vHorizontalDist * Math.sin(azimuthRad)
+  );
+  const vStraightGeometry = new THREE.BufferGeometry().setFromPoints([origin, vStraightEnd]);
+  const vStraightLine = new THREE.Line(vStraightGeometry, new THREE.LineBasicMaterial({ color: 0xffff00 }));
+  scene.add(vStraightLine);
+
+  return {
+    horizontal: { arcLine: hArcLine, line: hStraightLine },
+    vertical: { arcLine: vArcLine, line: vStraightLine }
+  };
+}
 
 function generateStar(azimuth, altitude, radius = 50) {
   altitude = altitude - 90
@@ -183,14 +265,61 @@ function generateStar(azimuth, altitude, radius = 50) {
 }
 
 let star = null;
+let angle = null;
+
+function disposeAngle(angleObj) {
+  if (!angleObj) return;
+
+  // Dispose horizontal arc
+  if (angleObj.horizontal?.arcLine) {
+    scene.remove(angleObj.horizontal.arcLine);
+    angleObj.horizontal.arcLine.geometry?.dispose();
+    angleObj.horizontal.arcLine.material?.dispose();
+  }
+
+  // Dispose horizontal indicator line
+  if (angleObj.horizontal?.line) {
+    scene.remove(angleObj.horizontal.line);
+    angleObj.horizontal.line.geometry?.dispose();
+    angleObj.horizontal.line.material?.dispose();
+  }
+
+  // Dispose vertical arc
+  if (angleObj.vertical?.arcLine) {
+    scene.remove(angleObj.vertical.arcLine);
+    angleObj.vertical.arcLine.geometry?.dispose();
+    angleObj.vertical.arcLine.material?.dispose();
+  }
+
+  // Dispose vertical indicator line
+  if (angleObj.vertical?.line) {
+    scene.remove(angleObj.vertical.line);
+    angleObj.vertical.line.geometry?.dispose();
+    angleObj.vertical.line.material?.dispose();
+  }
+}
 
 document.getElementById("renderBtn").addEventListener("click", () => {
+  // Remove previous star
   if (star) {
     scene.remove(star);
+    if (star.geometry) star.geometry.dispose();
+    if (star.material) star.material.dispose();
+    star = null;
   }
-  const azimuth = document.getElementById("azimuth_input").value;
-  const altitude = document.getElementById("altitude_input").value;
 
+  // Remove previous angle indicator
+  if (angle) {
+    disposeAngle(angle);
+    angle = null;
+  }
+
+  // Get input values
+  const azimuth = parseFloat(document.getElementById("azimuth_input").value);
+  const altitude = parseFloat(document.getElementById("altitude_input").value);
+
+  // Create new angle indicator and star
+  angle = createAngleIndicator(new THREE.Vector3(0, 0, 0), 10, 0, azimuth, altitude, 0xaaaaaa);
   star = generateStar(azimuth, altitude);
 });
 
@@ -203,8 +332,6 @@ function animate() {
   requestAnimationFrame(animate);
 
   controls.update();
-  // z_y.rotation.y += 0.001;
-  // console.log(z_y.rotation.y);
   renderer.render(scene, camera)
 }
 
